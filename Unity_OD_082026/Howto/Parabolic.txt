@@ -1,0 +1,147 @@
+HOW-TO: Parabolic Projection Warp in Unity (URP)
+
+Minimal, stable setup — works in Play Mode AND in Build
+
+1. Architecture Overview
+
+This setup uses:
+
+MainCamera → renders the 3D scene into a RenderTexture (WarpRT)
+
+WarpQuad → a flat quad that displays the RenderTexture using a warp material
+
+DisplayCamera → renders ONLY the quad to the projector (Display 1)
+
+This ensures:
+
+You can warp the image freely
+
+The build and editor output match
+
+The projector sees the warped image only
+
+2. Create the RenderTexture
+
+Right-click in the Project window → Create → Render Texture
+
+Name it: WarpRT
+
+Settings:
+
+Resolution = projector resolution (e.g., 1920×1080)
+
+Color Format = ARGB32
+
+Depth Buffer = None
+
+3. Configure the MainCamera
+
+Select MainCamera
+
+In the Output section:
+
+Output Texture = WarpRT
+
+In Culling Mask:
+
+Exclude the “WarpQuad” layer (we create it next)
+
+MainCamera now renders the scene into WarpRT instead of the screen.
+
+4. Create the WarpQuad
+
+GameObject → 3D Object → Quad
+
+Name it: WarpQuad
+
+Create a new layer: WarpQuad
+
+Assign this layer to the quad
+
+Scale the quad to match aspect ratio, for example:
+
+Scale = (16, 9, 1)
+
+Reset position and put it in front of DisplayCamera later
+
+5. Create the DisplayCamera
+
+GameObject → Camera
+
+Name: DisplayCamera
+
+Settings:
+
+Output → Target Display = Display 1
+
+Output Texture = None
+
+Culling Mask = WarpQuad only
+
+Clear Flags = Solid Color (black)
+
+Position it so that it sees the quad directly (e.g., at Z = –10)
+
+DisplayCamera now outputs ONLY the warped quad.
+
+6. Create the Warp Material
+
+Right-click → Create → Material
+
+Name: WarpMaterial
+
+Shader = your custom warp shader (e.g., “Custom/WarpParabolic”)
+
+Assign:
+
+_MainTex = WarpRT
+
+Assign WarpMaterial to the WarpQuad’s MeshRenderer
+
+The quad now displays the warped RenderTexture.
+
+7. Ensure the build includes the shader
+
+URP strips unused shaders unless explicitly included.
+
+Go to: Edit → Project Settings → Graphics
+
+Scroll to Always Included Shaders
+
+Click “+”
+
+Add your warp shader (e.g., “Custom/WarpParabolic”)
+
+This prevents the build from showing a white/black quad.
+
+8. Optional: Activate displays at runtime
+
+If your build uses multiple displays, create a script to activate them:
+
+Display.displays[i].Activate();
+
+
+Attach the script to an empty GameObject in the scene.
+
+9. Build & Run
+
+In the built application:
+
+MainCamera renders the real corridor into WarpRT
+
+WarpQuad shows WarpRT with the warp applied
+
+DisplayCamera renders the warped quad on Display 1
+
+The projector outputs the corrected image
+
+This matches the editor result exactly.
+
+Summary
+
+ MainCamera → WarpRT
+ WarpQuad → WarpMaterial(WarpRT)
+ DisplayCamera → sees only WarpQuad
+ Shader added to “Always Included Shaders”
+ Build displays the correct warped image
+
